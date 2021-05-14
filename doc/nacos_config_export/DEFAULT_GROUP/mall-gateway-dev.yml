@@ -1,0 +1,74 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: mall-gateway
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:9999
+      datasource:
+        gw-flow:
+          nacos:
+            server-addr: localhost:8848
+            dataId: ${spring.application.name}-getway-flow
+            groupId: SENTINEL_GROUP
+            rule-type: gw-flow
+        gw-api-group:
+          nacos:
+            server-addr: localhost:8848
+            dataId: ${spring.application.name}-getway-api
+            groupId: SENTINEL_GROUP
+            rule-type: gw-api-group    
+    gateway:
+      discovery:
+        locator:
+          lower-case-service-id: true
+          enabled: false
+      routes:
+        - id: mall-authcenter
+          uri: lb://mall-authcenter
+          predicates:
+            - Path=/oauth/**
+        - id: mall-member
+          uri: lb://mall-member
+          predicates:
+            - Path=/sso/**,/member/**
+        - id: mall-order
+          uri: lb://mall-order
+          predicates:
+            - Path=/cart/**,/order/**,/sharding/**,/static/qrcode/**
+        - id: mall-product
+          uri: lb://mall-product
+          predicates:
+            - Path=/pms/**
+        - id: mall-coupons
+          uri: lb://mall-coupons
+          predicates:
+            - Path=/coupon/**
+        - id: mall-portal
+          uri: lb://mall-portal
+          predicates:
+            - Path=/home/**,/portal/**
+management: #开启SpringBoot Admin的监控
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+logging:
+  level:
+    org.springframework.cloud.gateway: warn
+
+luban:
+  gateway:
+    shouldSkipUrls:
+      - /oauth/**
+      - /sso/**
+      - /home/**
+      - /portal/commentlist/**
+      - /order/paySuccess/**
+      - /pms/**
+      - /static/qrcode/**
